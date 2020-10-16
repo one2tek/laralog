@@ -38,5 +38,19 @@ trait ModelEventLogger
 
             (new LaraLog)->create($data);
         });
+
+        // Deleted
+        self::deleted(function ($model) {
+            $data = [
+                'event_type' => 'deleted',
+                'subject_type' => get_class($model),
+                'subject_id' => $model->id,
+                'causer_type' => get_class(auth()->user()),
+                'causer_id' => auth()->user()->id,
+                'properties' => []
+            ];
+
+            (new LaraLog)->create($data);
+        });
     }
 }
