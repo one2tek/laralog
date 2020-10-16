@@ -19,8 +19,10 @@
         }
     },
     "require": {
+        "genealabs/laravel-pivot-events": "^8.0",
         "illuminate/support": "^8.0",
-        "genealabs/laravel-pivot-events": "^8.0"
+        "illuminate/database": "^8.0",
+        "illuminate/config": "^8.0"
     },
     "config": {
         "sort-packages": true
