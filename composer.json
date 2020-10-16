@@ -24,6 +24,13 @@
         "illuminate/database": "^8.0",
         "illuminate/config": "^8.0"
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "one2tek\\laralog\\Providers\\LaraLogServiceProvider"
+            ]
+        }
+    },
     "config": {
         "sort-packages": true
     },

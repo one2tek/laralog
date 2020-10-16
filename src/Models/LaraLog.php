@@ -19,11 +19,11 @@ class LaraLog extends Model
     public function __construct(array $attributes = [])
     {
         if (! isset($this->connection)) {
-            $this->setConnection(config('laralogs.database_connection'));
+            $this->setConnection(config('laralog.database_connection'));
         }
 
         if (! isset($this->table)) {
-            $this->setTable(config('laralogs.table_name'));
+            $this->setTable(config('laralog.table_name'));
         }
 
         parent::__construct($attributes);

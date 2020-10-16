@@ -14,8 +14,8 @@ class LaraLogServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__. '../../../config/laralogs.php',
-            'laralogs'
+            __DIR__. '../../../config/laralog.php',
+            'laralog'
         );
     }
 
@@ -27,7 +27,7 @@ class LaraLogServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__. '/../../config/laralogs.php' => config_path('laralogs.php'),
+            __DIR__. '/../../config/laralog.php' => config_path('laralog.php'),
         ]);
 
         if (! class_exists('CreateLogsTable')) {
