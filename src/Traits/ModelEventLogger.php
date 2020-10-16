@@ -1,6 +1,6 @@
 <?php
 
-namespace one2tek\larapi\Traits;
+namespace one2tek\laralog\Traits;
 
 trait ModelEventLogger
 {
