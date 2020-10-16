@@ -24,5 +24,19 @@ trait ModelEventLogger
 
             (new LaraLog)->create($data);
         });
+
+        // Updated
+        self::updated(function ($model) {
+            $data = [
+                'event_type' => 'updated',
+                'subject_type' => get_class($model),
+                'subject_id' => $model->id,
+                'causer_type' => get_class(auth()->user()),
+                'causer_id' => auth()->user()->id,
+                'properties' => ['new_attributes' => $model->getDirty()]
+            ];
+
+            (new LaraLog)->create($data);
+        });
     }
 }
