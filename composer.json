@@ -1,6 +1,18 @@
 {
     "name": "one2tek/laralog",
     "description": "Laravel Logs.",
+    "keywords": [
+        "one2tek",
+        "one2tek-laravel",
+        "one2tek-laravel-log",
+        "one2tek-log",
+        "laralog",
+        "laralog-laravel",
+        "laravel",
+        "laravel-logging",
+        "laravel-log",
+        "laravel-8"
+    ],
     "homepage": "https://github.com/one2tek/laralog",
     "license": "MIT",
     "authors": [
