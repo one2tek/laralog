@@ -52,5 +52,32 @@ trait ModelEventLogger
 
             (new LaraLog)->create($data);
         });
+
+        // Pivot detached
+        static::pivotDetached(function ($model, $relationName1, $relationName2, $pivotIdsAttributes) {
+            $data = [
+                'event_type' => 'pivot_detached',
+                'subject_type' => get_class($model),
+                'subject_id' => $model->id,
+                'causer_type' => get_class(auth()->user()),
+                'causer_id' => auth()->user()->id,
+                'properties' => ['new_attributes' => []]
+            ];
+
+            $logAttributes = (get_class_vars(get_class($model))['logAttributes']) ?? [];
+            
+            if (array_key_exists($relationName2, $logAttributes)) {
+                foreach ($pivotIdsAttributes as $attributeId) {
+                    $related = $model->$relationName2()->getRelated();
+                    $relatedData = $related->select($logAttributes[$relationName2])->whereId($attributeId)->get();
+                    
+                    foreach ($logAttributes[$relationName2] as $colName) {
+                        $data['properties']['new_attributes'][$relationName2][$colName] = $relatedData->pluck($colName)[0];
+                    }
+                }
+            }
+
+            (new LaraLog)->create($data);
+        });
     }
 }
