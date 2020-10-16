@@ -3,12 +3,11 @@
 namespace one2tek\laralog\Traits;
 
 use one2tek\laralog\Models\LaraLog;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 trait ModelEventLogger
 {
-    /**
-     * Automatically boot with Model, and register Events handler.
-     */
     protected static function bootModelEventLogger()
     {
         // Created
@@ -33,8 +32,27 @@ trait ModelEventLogger
                 'subject_id' => $model->id,
                 'causer_type' => get_class(auth()->user()),
                 'causer_id' => auth()->user()->id,
-                'properties' => ['new_attributes' => $model->getDirty()]
+                'properties' => [
+                    // 'old_attributes' => $model->getOriginal(),
+                    'new_attributes' => $model->getDirty()
+                ]
             ];
+
+            $logAttributes = $model->attributesToBeLogged();
+            foreach ($logAttributes as $relName => $attribute) {
+                if (is_array($attribute)) {
+                    $relationInstance = $model->attributesInfo($relName, 'instance');
+                    if ($relationInstance == 'Illuminate\Database\Eloquent\Relations\BelongsTo') {
+                        $relationForeign = $model->attributesInfo($relName, 'foreign');
+                        
+                        if ($model->isDirty($relationForeign)) {
+                            foreach ($attribute as $attr) {
+                                $data['properties']['new_attributes'][$relName][$attr] = $model->$relName->$attr;
+                            }
+                        }
+                    }
+                }
+            }
 
             (new LaraLog)->create($data);
         });
@@ -64,7 +82,7 @@ trait ModelEventLogger
                 'properties' => ['new_attributes' => []]
             ];
 
-            $logAttributes = (get_class_vars(get_class($model))['logAttributes']) ?? [];
+            $logAttributes = $model->attributesToBeLogged();
             
             if (array_key_exists($relationName2, $logAttributes)) {
                 foreach ($pivotIdsAttributes as $attributeId) {
@@ -91,7 +109,7 @@ trait ModelEventLogger
                 'properties' => ['new_attributes' => []]
             ];
 
-            $logAttributes = (get_class_vars(get_class($model))['logAttributes']) ?? [];
+            $logAttributes = $model->attributesToBeLogged();
             
             if (array_key_exists($relationName2, $logAttributes)) {
                 foreach ($pivotIdsAttributes as $attributeId) {
@@ -106,5 +124,37 @@ trait ModelEventLogger
 
             (new LaraLog)->create($data);
         });
+    }
+
+    protected function attributesToBeLogged()
+    {
+        return static::$logAttributes;
+    }
+
+    protected static function attributesInfo($attributeName, $infoType)
+    {
+        $relation = self::$attributeName();
+        $info = null;
+
+        switch ($infoType) {
+            case 'instance':
+                $info = get_class($relation) ;
+                break;
+
+            case 'foreign':
+                if ($relation instanceof BelongsTo) {
+                    $info = $relation->getQualifiedForeignKeyName();
+                    $lastColumn = explode('.', $info);
+                    $lastColumn = end($lastColumn);
+                    $info = str_replace('.'. $lastColumn, '', $lastColumn);
+                } elseif ($relation instanceof BelongsToMany) {
+                    $info = $relation->getQualifiedForeignPivotKeyName;
+                } else {
+                    $info = $relation->getQualifiedForeignKeyName;
+                }
+                break;
+        }
+
+        return $info;
     }
 }
