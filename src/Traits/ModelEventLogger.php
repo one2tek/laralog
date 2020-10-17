@@ -16,8 +16,8 @@ trait ModelEventLogger
                 'event_type' => 'created',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
-                'causer_type' => get_class(auth()->user()),
-                'causer_id' => auth()->user()->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
+                'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => ['new_attributes' => $model->getAttributes()]
             ];
 
@@ -30,8 +30,8 @@ trait ModelEventLogger
                 'event_type' => 'updated',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
-                'causer_type' => get_class(auth()->user()),
-                'causer_id' => auth()->user()->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
+                'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => [
                     // 'old_attributes' => $model->getOriginal(),
                     'new_attributes' => $model->getDirty()
