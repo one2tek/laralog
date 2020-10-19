@@ -21,6 +21,24 @@ trait ModelEventLogger
                 'properties' => ['new_attributes' => $model->getDirtyAttributes()]
             ];
 
+            $logAttributes = $model->attributesToBeLogged();
+            foreach ($logAttributes as $relName => $attribute) {
+                if (is_array($attribute)) {
+                    $relationInstance = $model->attributesInfo($relName, 'instance');
+                    if ($relationInstance == 'Illuminate\Database\Eloquent\Relations\BelongsTo') {
+                        $relationForeign = $model->attributesInfo($relName, 'foreign');
+                        
+                        if ($model->isDirty($relationForeign)) {
+                            foreach ($attribute as $attr) {
+                                if (isset($model->$relName->$attr)) {
+                                    $data['properties']['new_attributes'][$relName][$attr] = $model->$relName->$attr;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             (new LaraLog)->create($data);
         });
 
@@ -46,7 +64,9 @@ trait ModelEventLogger
                         
                         if ($model->isDirty($relationForeign)) {
                             foreach ($attribute as $attr) {
-                                $data['properties']['new_attributes'][$relName][$attr] = $model->$relName->$attr;
+                                if (isset($model->$relName->$attr)) {
+                                    $data['properties']['new_attributes'][$relName][$attr] = $model->$relName->$attr;
+                                }
                             }
                         }
                     }
