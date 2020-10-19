@@ -21,27 +21,14 @@ trait ModelEventLogger
                 'properties' => ['new_attributes' => $model->getDirtyAttributes()]
             ];
 
-            $logAttributes = $model->attributesToBeLogged();
-            foreach ($logAttributes as $relName => $attribute) {
-                if (is_array($attribute)) {
-                    $relationInstance = $model->attributesInfo($relName, 'instance');
-                    if ($relationInstance == 'Illuminate\Database\Eloquent\Relations\BelongsTo') {
-                        $relationForeign = $model->attributesInfo($relName, 'foreign');
-                        
-                        if ($model->isDirty($relationForeign)) {
-                            foreach ($attribute as $attr) {
-                                if (isset($model->$relName->$attr)) {
-                                    $data['properties']['new_attributes'][$relName][$attr] = $model->$relName->$attr;
-                                }
-                            }
-                        }
-                    }
+            $relationsAttributes = self::logRelationshipAttributes($model, 'created');
+            if (count($relationsAttributes)) {
+                foreach ($relationsAttributes as $key => $value) {
+                    $data['properties']['new_attributes'][$key] = $value;
                 }
             }
 
-            if (count($data['properties']['new_attributes'])) {
-                (new LaraLog)->create($data);
-            }
+            (new LaraLog)->create($data);
         });
 
         // Updated
@@ -57,27 +44,14 @@ trait ModelEventLogger
                 ]
             ];
 
-            $logAttributes = $model->attributesToBeLogged();
-            foreach ($logAttributes as $relName => $attribute) {
-                if (is_array($attribute)) {
-                    $relationInstance = $model->attributesInfo($relName, 'instance');
-                    if ($relationInstance == 'Illuminate\Database\Eloquent\Relations\BelongsTo') {
-                        $relationForeign = $model->attributesInfo($relName, 'foreign');
-                        
-                        if ($model->isDirty($relationForeign)) {
-                            foreach ($attribute as $attr) {
-                                if (isset($model->$relName->$attr)) {
-                                    $data['properties']['new_attributes'][$relName][$attr] = $model->$relName->$attr;
-                                }
-                            }
-                        }
-                    }
+            $relationsAttributes = self::logRelationshipAttributes($model, 'updated');
+            if (count($relationsAttributes)) {
+                foreach ($relationsAttributes as $key => $value) {
+                    $data['properties']['new_attributes'][$key] = $value;
                 }
             }
 
-            if (count($data['properties']['new_attributes'])) {
-                (new LaraLog)->create($data);
-            }
+            (new LaraLog)->create($data);
         });
 
         // Deleted
@@ -105,7 +79,7 @@ trait ModelEventLogger
                 'properties' => ['new_attributes' => []]
             ];
 
-            $logAttributes = $model->attributesToBeLogged();
+            $logAttributes = $model->attributesShouldBeLogged();
             
             if (array_key_exists($relationName2, $logAttributes)) {
                 foreach ($pivotIdsAttributes as $attributeId) {
@@ -134,7 +108,7 @@ trait ModelEventLogger
                 'properties' => ['new_attributes' => []]
             ];
 
-            $logAttributes = $model->attributesToBeLogged();
+            $logAttributes = $model->attributesShouldBeLogged();
             
             if (array_key_exists($relationName2, $logAttributes)) {
                 foreach ($pivotIdsAttributes as $attributeId) {
@@ -153,19 +127,55 @@ trait ModelEventLogger
         });
     }
 
-    protected function attributesToBeLogged()
+    protected static function logRelationshipAttributes($model, $event)
+    {
+        $data = [];
+
+        $logAttributes = $model->attributesShouldBeLogged();
+        foreach ($logAttributes as $relName => $attribute) {
+            if (!is_array($attribute)) {
+                continue;
+            }
+
+            $relationInstance = $model->attributesInfo($model, $relName, 'instance');
+            if ($relationInstance == 'Illuminate\Database\Eloquent\Relations\BelongsTo') {
+                $relationForeign = $model->attributesInfo($model, $relName, 'foreign');
+                
+                if ($event != 'created') {
+                    if (!$model->isDirty($relationForeign)) {
+                        continue;
+                    }
+                }
+
+                foreach ($attribute as $attr) {
+                    if (isset($model->$relName->$attr)) {
+                        $data[$relName][$attr] = $model->$relName->$attr;
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    protected function attributesShouldBeLogged()
     {
         return static::$logAttributes;
     }
 
-    protected function attributesToBeNotLogged()
+    protected function attributesShouldBeIgnoredFromLogs()
     {
-        return static::$ignoreChangedAttributes;
+        return static::$ignoreLogAttributes;
     }
 
-    protected static function attributesInfo($attributeName, $infoType)
+    protected function attributesShouldBeMaskedBeforeLogged()
     {
-        $relation = self::$attributeName();
+        return static::$maskBeforeLogAttributes;
+    }
+
+    protected static function attributesInfo($model, $attributeName, $infoType)
+    {
+        $relation = $model->$attributeName();
         $info = null;
 
         switch ($infoType) {
@@ -192,19 +202,22 @@ trait ModelEventLogger
 
     protected function getDirtyAttributes()
     {
-        $logAttributes = self::attributesToBeLogged();
-        $notlogAttributes = self::attributesToBeNotLogged();
-
-        $allowToLogAllAttributes = in_array('*', $logAttributes);
-
+        $attributesShouldBeLogged = self::attributesShouldBeLogged();
+        $attributesShouldBeIgnoredFromLogs = self::attributesShouldBeIgnoredFromLogs();
+        $attributesShouldBeMaskedBeforeLogged = self::attributesShouldBeMaskedBeforeLogged();
+        $allowToLogAllAttributes = in_array('*', $attributesShouldBeLogged);
         $dirtyAttributes = self::getDirty();
 
         foreach ($dirtyAttributes as $key => $value) {
             if ($allowToLogAllAttributes) {
-                if (in_array($key, $notlogAttributes)) {
+                if (in_array($key, $attributesShouldBeIgnoredFromLogs)) {
                     unset($dirtyAttributes[$key]);
+                } else {
+                    if (in_array($key, $attributesShouldBeMaskedBeforeLogged)) {
+                        $dirtyAttributes[$key] = '******';
+                    }
                 }
-            } elseif (!in_array($key, $logAttributes)) {
+            } elseif (!in_array($key, $attributesShouldBeLogged)) {
                 unset($dirtyAttributes[$key]);
             }
         }
