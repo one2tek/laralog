@@ -114,7 +114,9 @@ trait ModelEventLogger
                 }
             }
 
-            (new LaraLog)->create($data);
+            if (count($data['properties']['new_attributes'])) {
+                (new LaraLog)->create($data);
+            }
         });
 
         // Pivot attached
@@ -141,7 +143,9 @@ trait ModelEventLogger
                 }
             }
 
-            (new LaraLog)->create($data);
+            if (count($data['properties']['new_attributes'])) {
+                (new LaraLog)->create($data);
+            }
         });
     }
 
