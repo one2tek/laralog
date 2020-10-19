@@ -18,7 +18,7 @@ trait ModelEventLogger
                 'subject_id' => $model->id,
                 'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
-                'properties' => ['new_attributes' => $model->getAttributes()]
+                'properties' => ['new_attributes' => $model->getDirtyAttributes()]
             ];
 
             (new LaraLog)->create($data);
@@ -33,8 +33,7 @@ trait ModelEventLogger
                 'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => [
-                    // 'old_attributes' => $model->getOriginal(),
-                    'new_attributes' => $model->getDirty()
+                    'new_attributes' => $model->getDirtyAttributes()
                 ]
             ];
 
@@ -63,8 +62,8 @@ trait ModelEventLogger
                 'event_type' => 'deleted',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
-                'causer_type' => get_class(auth()->user()),
-                'causer_id' => auth()->user()->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
+                'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => []
             ];
 
@@ -77,8 +76,8 @@ trait ModelEventLogger
                 'event_type' => 'pivot_detached',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
-                'causer_type' => get_class(auth()->user()),
-                'causer_id' => auth()->user()->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
+                'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => ['new_attributes' => []]
             ];
 
@@ -104,8 +103,8 @@ trait ModelEventLogger
                 'event_type' => 'pivot_attached',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
-                'causer_type' => get_class(auth()->user()),
-                'causer_id' => auth()->user()->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
+                'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => ['new_attributes' => []]
             ];
 
@@ -129,6 +128,11 @@ trait ModelEventLogger
     protected function attributesToBeLogged()
     {
         return static::$logAttributes;
+    }
+
+    protected function attributesToBeNotLogged()
+    {
+        return static::$ignoreChangedAttributes;
     }
 
     protected static function attributesInfo($attributeName, $infoType)
@@ -156,5 +160,27 @@ trait ModelEventLogger
         }
 
         return $info;
+    }
+
+    protected function getDirtyAttributes()
+    {
+        $logAttributes = self::attributesToBeLogged();
+        $notlogAttributes = self::attributesToBeNotLogged();
+
+        $allowToLogAllAttributes = in_array('*', $logAttributes);
+
+        $dirtyAttributes = self::getDirty();
+
+        foreach ($dirtyAttributes as $key => $value) {
+            if ($allowToLogAllAttributes) {
+                if (in_array($key, $notlogAttributes)) {
+                    unset($dirtyAttributes[$key]);
+                }
+            } elseif (!in_array($key, $logAttributes)) {
+                unset($dirtyAttributes[$key]);
+            }
+        }
+
+        return $dirtyAttributes;
     }
 }
