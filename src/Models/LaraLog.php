@@ -2,16 +2,22 @@
 
 namespace one2tek\laralog\Models;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 
 class LaraLog extends Model
 {
+    /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var array
+     */
     public $guarded = [];
 
+    /**
+     * The attributes that should cast.
+     *
+     * @var array
+     */
     protected $casts = [
         'properties' => 'collection',
     ];
@@ -29,55 +35,13 @@ class LaraLog extends Model
         parent::__construct($attributes);
     }
 
-    public function subject(): MorphTo
+    public function subject()
     {
         return $this->morphTo();
     }
 
-    public function causer(): MorphTo
+    public function causer()
     {
         return $this->morphTo();
-    }
-
-    public function getExtraProperty(string $propertyName)
-    {
-        return Arr::get($this->properties->toArray(), $propertyName);
-    }
-
-    public function changes(): Collection
-    {
-        if (! $this->properties instanceof Collection) {
-            return new Collection();
-        }
-
-        return $this->properties->only(['attributes', 'old']);
-    }
-
-    public function getChangesAttribute(): Collection
-    {
-        return $this->changes();
-    }
-
-    public function scopeInLog(Builder $query, ...$logNames): Builder
-    {
-        if (is_array($logNames[0])) {
-            $logNames = $logNames[0];
-        }
-
-        return $query->whereIn('log_name', $logNames);
-    }
-
-    public function scopeCausedBy(Builder $query, Model $causer): Builder
-    {
-        return $query
-            ->where('causer_type', $causer->getMorphClass())
-            ->where('causer_id', $causer->getKey());
-    }
-
-    public function scopeForSubject(Builder $query, Model $subject): Builder
-    {
-        return $query
-            ->where('subject_type', $subject->getMorphClass())
-            ->where('subject_id', $subject->getKey());
     }
 }
