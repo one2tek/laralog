@@ -18,7 +18,10 @@ trait ModelEventLogger
                 'subject_id' => $model->id,
                 'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
-                'properties' => ['new_attributes' => $model->getDirtyAttributes()]
+                'properties' => [
+                    'new_attributes' => $model->getDirtyAttributes(),
+                    'all_attributes' => $model->getAllAttributes()
+                ],
             ];
 
             $relationsAttributes = self::logRelationshipAttributes($model, 'created');
@@ -40,7 +43,8 @@ trait ModelEventLogger
                 'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => [
-                    'new_attributes' => $model->getDirtyAttributes()
+                    'new_attributes' => $model->getDirtyAttributes(),
+                    'all_attributes' => $model->getAllAttributes()
                 ]
             ];
 
@@ -198,6 +202,23 @@ trait ModelEventLogger
         }
 
         return $info;
+    }
+
+    protected function getAllAttributes()
+    {
+        $allAttributes = self::getAttributes();
+        $attributesShouldBeMaskedBeforeLogged = self::attributesShouldBeMaskedBeforeLogged();
+        $attributes = [];
+
+        foreach ($allAttributes as $key => $value) {
+            if (in_array($key, $attributesShouldBeMaskedBeforeLogged)) {
+                $attributes[$key] = '******';
+            } else {
+                $attributes[$key] = $value;
+            }
+        }
+
+        return $attributes;
     }
 
     protected function getDirtyAttributes()
