@@ -10,6 +10,10 @@ trait ModelEventLogger
 {
     protected static function bootModelEventLogger()
     {
+        if (self::allowLogs() == false) {
+            return;
+        }
+        
         // Created
         self::created(function ($model) {
             $data = [
@@ -165,6 +169,15 @@ trait ModelEventLogger
     protected function attributesShouldBeLogged()
     {
         return static::$logAttributes;
+    }
+
+    protected static function allowLogs()
+    {
+        if (isset(static::$allowLogs)) {
+            return static::$allowLogs;
+        }
+
+        return true;
     }
 
     protected function attributesShouldBeIgnoredFromLogs()
