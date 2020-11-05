@@ -10,7 +10,7 @@ return [
 
     /*
      * This is the database connection that will be used by the migration and
-     * the Activity model shipped with this package.
+     * the LaraLog model shipped with this package.
      */
     'database_connection' => 'mysql'
 ];
