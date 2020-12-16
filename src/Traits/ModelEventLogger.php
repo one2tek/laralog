@@ -173,6 +173,10 @@ trait ModelEventLogger
 
     protected static function allowLogs()
     {
+        if (in_array(app()->environment(), config('laralog.disable_on_environments'))) {
+            return false;
+        }
+
         if (isset(static::$allowLogs)) {
             return static::$allowLogs;
         }
