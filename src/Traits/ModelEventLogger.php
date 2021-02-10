@@ -20,6 +20,7 @@ trait ModelEventLogger
                 'event_type' => 'created',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => [
                     'new_attributes' => $model->getDirtyAttributes(),
@@ -43,6 +44,7 @@ trait ModelEventLogger
                 'event_type' => 'updated',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => [
                     'new_attributes' => $model->getDirtyAttributes(),
@@ -66,6 +68,7 @@ trait ModelEventLogger
                 'event_type' => 'deleted',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => []
             ];
@@ -79,6 +82,7 @@ trait ModelEventLogger
                 'event_type' => 'pivot_detached',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => ['new_attributes' => []]
             ];
@@ -107,6 +111,7 @@ trait ModelEventLogger
                 'event_type' => 'pivot_attached',
                 'subject_type' => get_class($model),
                 'subject_id' => $model->id,
+                'causer_type' => (auth()->check()) ? get_class(auth()->user()) : null,
                 'causer_id' => (auth()->check()) ? auth()->user()->id : null,
                 'properties' => ['new_attributes' => []]
             ];
