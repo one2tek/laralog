@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class DropMorphFromLogsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up()
+    {
+        Schema::connection(config('laralog.database_connection'))->table(config('laralog.table_name'), function (Blueprint $table) {
+            if(Schema::hasColumn(config('laralog.table_name'),'causer_type')){
+                $table->dropColumn('causer_type');
+                $table->dropColumn('causer_id');
+            }
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        Schema::connection(config('laralog.database_connection'))->table(config('laralog.table_name'), function (Blueprint $table) {
+            if(!Schema::hasColumn(config('laralog.table_name'),'causer_type')){
+                $table->nullableMorphs('causer', 'causer')->after('subject_id');
+            }
+        });
+    }
+}
