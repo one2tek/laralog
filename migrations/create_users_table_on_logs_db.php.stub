@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateUsersTableOnLogsDb extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up()
+    {
+        if(!Schema::connection(config('laralog.database_connection'))->hasTable('users')){
+            Schema::connection(config('laralog.database_connection'))->create('users', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->string('name',191);
+                $table->string('role',20);
+                $table->timestamps();
+            });
+        }
+    }
+       
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        if(Schema::connection(config('laralog.database_connection'))->hasTable('users')){
+            Schema::connection(config('laralog.database_connection'))->dropIfExists('users');
+        }
+    }
+}

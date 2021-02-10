@@ -11,14 +11,16 @@ class CreateLogsTable extends Migration
      */
     public function up()
     {
-        Schema::connection(config('laralog.database_connection'))->create(config('laralog.table_name'), function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('event_type')->nullable();
-            $table->nullableMorphs('subject', 'subject');
-            $table->nullableMorphs('causer', 'causer');
-            $table->json('properties')->nullable();
-            $table->timestamps();
-        });
+        if(!Schema::connection(config('laralog.database_connection'))->hasTable(config('laralog.table_name'))){
+            Schema::connection(config('laralog.database_connection'))->create(config('laralog.table_name'), function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->string('event_type')->nullable();
+                $table->nullableMorphs('subject', 'subject');
+                $table->nullableMorphs('causer', 'causer');
+                $table->json('properties')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -26,6 +28,8 @@ class CreateLogsTable extends Migration
      */
     public function down()
     {
-        Schema::connection(config('laralog.database_connection'))->dropIfExists(config('laralog.table_name'));
+        if(Schema::connection(config('laralog.database_connection'))->hasTable(config('laralog.table_name'))){
+            Schema::connection(config('laralog.database_connection'))->dropIfExists(config('laralog.table_name'));
+        }
     }
 }
