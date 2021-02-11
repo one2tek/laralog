@@ -16,7 +16,8 @@ class CreateLogsTable extends Migration
                 $table->bigIncrements('id');
                 $table->string('event_type')->nullable();
                 $table->nullableMorphs('subject', 'subject');
-                $table->nullableMorphs('causer', 'causer');
+                $table->bigInteger('causer_id')->unsigned()->nullable();
+                $table->foreign('causer_id')->references('id')->on('users');
                 $table->json('properties')->nullable();
                 $table->timestamps();
             });
