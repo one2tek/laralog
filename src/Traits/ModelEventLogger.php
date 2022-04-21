@@ -16,6 +16,10 @@ trait ModelEventLogger
         
         // Created
         self::created(function ($model) {
+            if (empty($model->getDirtyAttributes())) {
+                return;
+            }
+
             $data = [
                 'event_type' => 'created',
                 'subject_type' => get_class($model),
@@ -39,6 +43,10 @@ trait ModelEventLogger
 
         // Updated
         self::updated(function ($model) {
+            if (empty($model->getDirtyAttributes())) {
+                return;
+            }
+
             $data = [
                 'event_type' => 'updated',
                 'subject_type' => get_class($model),
