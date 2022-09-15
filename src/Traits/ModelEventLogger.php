@@ -2,7 +2,7 @@
 
 namespace one2tek\laralog\Traits;
 
-use one2tek\laralog\Models\LaraLog;
+use one2tek\laralog\Jobs\CreateLog;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -37,8 +37,8 @@ trait ModelEventLogger
                     $data['properties']['new_attributes'][$key] = $value;
                 }
             }
-
-            (new LaraLog)->create($data);
+            
+            CreateLog::dispatch($data)->onQueue('laralog');
         });
 
         // Updated
@@ -65,7 +65,7 @@ trait ModelEventLogger
                 }
             }
 
-            (new LaraLog)->create($data);
+            CreateLog::dispatch($data)->onQueue('laralog');
         });
 
         // Deleted
@@ -78,7 +78,7 @@ trait ModelEventLogger
                 'properties' => []
             ];
 
-            (new LaraLog)->create($data);
+            CreateLog::dispatch($data)->onQueue('laralog');
         });
 
         // Pivot detached
@@ -105,7 +105,7 @@ trait ModelEventLogger
             }
 
             if (count($data['properties']['new_attributes'])) {
-                (new LaraLog)->create($data);
+                CreateLog::dispatch($data)->onQueue('laralog');
             }
         });
 
@@ -133,7 +133,7 @@ trait ModelEventLogger
             }
 
             if (count($data['properties']['new_attributes'])) {
-                (new LaraLog)->create($data);
+                CreateLog::dispatch($data)->onQueue('laralog');
             }
         });
     }
